@@ -1,0 +1,22 @@
+# Reemplaza TUDOMINIO.com por tu dominio real
+:80 {
+    @http {
+        protocol http
+    }
+    redir @http https://{host}{uri}
+}
+
+TUDOMINIO.com {
+    encode zstd gzip
+    # Static web (Nginx container) en la red compose
+    reverse_proxy web:80
+
+    handle_path /api/* {
+        reverse_proxy api:4000
+    }
+
+    # Opcional: cabeceras adicionales
+    header {
+        Strict-Transport-Security "max-age=31536000; includeSubDomains; preload"
+    }
+}

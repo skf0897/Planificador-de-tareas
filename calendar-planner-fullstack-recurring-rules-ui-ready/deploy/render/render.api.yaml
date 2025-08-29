@@ -1,0 +1,21 @@
+services:
+  - type: web
+    name: calendar-planner-api
+    env: node
+    plan: free
+    rootDir: server
+    buildCommand: npm install
+    startCommand: node src/index.js
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: 4000
+      - key: COOKIE_NAME
+        value: token
+      - key: JWT_SECRET
+        generateValue: true
+      - key: MONGO_URI
+        # Puedes usar Render Mongo Instance o Mongo Atlas
+        # Para Atlas, pega la cadena completa:
+        value: mongodb+srv://<user>:<pass>@<cluster>/calendar_planner?retryWrites=true&w=majority

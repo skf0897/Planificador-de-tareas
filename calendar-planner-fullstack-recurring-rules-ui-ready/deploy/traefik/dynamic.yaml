@@ -1,0 +1,30 @@
+# Traefik dinámico (TLS + HTTP->HTTPS)
+http:
+  routers:
+    web:
+      rule: Host(`TUDOMINIO.com`)
+      entryPoints: [websecure]
+      service: web-svc
+      tls:
+        certResolver: letsencrypt
+    api:
+      rule: Host(`TUDOMINIO.com`) && PathPrefix(`/api`)
+      entryPoints: [websecure]
+      service: api-svc
+      tls:
+        certResolver: letsencrypt
+
+  services:
+    web-svc:
+      loadBalancer:
+        servers:
+          - url: http://web:80
+    api-svc:
+      loadBalancer:
+        servers:
+          - url: http://api:4000
+
+tls:
+  options:
+    default:
+      minVersion: VersionTLS12

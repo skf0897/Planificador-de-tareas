@@ -1,0 +1,22 @@
+services:
+  - type: web
+    name: calendar-api
+    env: node
+    plan: free
+    buildCommand: "cd server && npm install"
+    startCommand: "cd server && npm start"
+    envVars:
+      - key: MONGO_URI
+        sync: false
+      - key: JWT_SECRET
+        generateValue: true
+      - key: FRONTEND_ORIGIN
+        value: https://<your-frontend>.onrender.com
+  - type: web
+    name: calendar-web
+    env: static
+    buildCommand: "cd client && npm install && npm run build"
+    staticPublishPath: client/dist
+    envVars:
+      - key: VITE_API_URL
+        value: https://calendar-api.onrender.com/api
