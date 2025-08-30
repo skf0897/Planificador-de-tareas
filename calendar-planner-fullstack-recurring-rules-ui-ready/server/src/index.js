@@ -18,7 +18,6 @@ const app = express();
 
 const PORT = process.env.PORT || 4000;
 const FRONTEND_ORIGIN = process.env.FRONTEND_ORIGIN || 'http://localhost:5173';
-const COOKIE_NAME = process.env.COOKIE_NAME || 'token';
 
 // --- Middleware ---
 app.use(helmet());
@@ -39,22 +38,28 @@ const limiter = rateLimit({
 });
 app.use(limiter);
 
-// salud
+// ===== Health checks =====
+// Render hace HEAD/GET a "/"
+app.head('/', (_req, res) => res.status(200).end());
+app.get('/', (_req, res) => res.status(200).send('OK'));
+
+// Salud JSON (para tus pruebas)
 app.get('/api/health', (_req, res) => res.json({ ok: true }));
 
-// rutas
+// ===== Rutas de la app =====
 app.use('/api/auth', authRouter);
 app.use('/api/tasks', tasksRouter);
 app.use('/api/recurring', recurringRouter);
 app.use('/api/calendar', calendarRouter);
 
-// conexión DB y arranque
+// ===== Conexión DB y arranque =====
 const MONGO_URI = process.env.MONGO_URI || 'mongodb://localhost:27017/calendar_planner';
 
 mongoose.connect(MONGO_URI)
   .then(() => {
     console.log('MongoDB conectado');
-    app.listen(PORT, () => console.log(`Servidor en http://localhost:${PORT}`));
+    // Importante en Render: escuchar en 0.0.0.0 y usar el PORT que inyecta Render
+    app.listen(PORT, '0.0.0.0', () => console.log(`Servidor en http://localhost:${PORT}`));
   })
   .catch((err) => {
     console.error('Error conectando Mongo:', err);
