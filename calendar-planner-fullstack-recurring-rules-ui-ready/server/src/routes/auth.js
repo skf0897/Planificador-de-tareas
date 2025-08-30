@@ -1,11 +1,9 @@
-// server/src/routes/auth.js
 import { Router } from 'express';
 import { body, validationResult } from 'express-validator';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 import User from '../models/User.js';
 
-// --- Google OAuth (importaciones arriba) ---
 import passport from 'passport';
 import { Strategy as GoogleStrategy } from 'passport-google-oauth20';
 
@@ -24,14 +22,13 @@ const issueToken = (user) =>
 const setAuthCookie = (res, token) => {
   res.cookie(COOKIE_NAME, token, {
     httpOnly: true,
-    sameSite: 'none',                    // <-- IMPORTANTE para Vercel + Render
+    sameSite: 'none',                 // <-- necesario para dominios distintos
     secure: process.env.NODE_ENV === 'production',
     maxAge: 7 * 24 * 60 * 60 * 1000,
   });
 };
 
 // ---------- Auth básico ----------
-
 router.post(
   '/register',
   body('email').isEmail(),
@@ -77,7 +74,6 @@ router.post(
 );
 
 router.post('/logout', (req, res) => {
-  // Para que borre correctamente, los flags deben coincidir con los usados al setear
   res.clearCookie(COOKIE_NAME, {
     httpOnly: true,
     sameSite: 'none',
@@ -99,7 +95,6 @@ router.get('/me', async (req, res) => {
 });
 
 // ---------- Google OAuth ----------
-
 const googleScopes = (
   process.env.GOOGLE_SCOPES ||
   'https://www.googleapis.com/auth/userinfo.email https://www.googleapis.com/auth/calendar'
@@ -156,10 +151,10 @@ if (
       const user = req.user;
       const token = issueToken(user);
       setAuthCookie(res, token);
-      // Redirige a tu frontend
       res.redirect(FRONTEND);
     }
   );
 }
 
 export default router;
+
