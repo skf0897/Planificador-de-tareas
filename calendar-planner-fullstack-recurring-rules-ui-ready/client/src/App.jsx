@@ -89,7 +89,7 @@ function AuthView({ setUser }) {
             <LogIn className='w-5 h-5' />
           </div>
           <div>
-            <h1 className='text-xl font-bold'>Planner 3D</h1>
+            <h1 className='text-xl font-bold'>Planificador personal</h1>
             <p className='text-xs text-gray-500'>Accede o crea tu cuenta</p>
           </div>
         </div>
