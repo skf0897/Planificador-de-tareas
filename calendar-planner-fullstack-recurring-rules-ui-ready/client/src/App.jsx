@@ -212,7 +212,7 @@ function CalendarApp({ user, setUser }) {
               <CalendarIcon className='w-5 h-5' />
             </div>
             <div>
-              <h1 className='text-2xl font-bold leading-none'>Planner 3D</h1>
+              <h1 className='text-2xl font-bold leading-none'>Planificador Personal</h1>
               <p className='text-sm text-gray-500'>Hola, {user.email}</p>
             </div>
           </div>
@@ -288,7 +288,7 @@ function CalendarApp({ user, setUser }) {
         )}
       </Dialog>
 
-      <footer className='mt-10 text-center text-xs text-gray-500'>Hecho con ❤️ en React + Tailwind. Autenticación con cookie httpOnly.</footer>
+      <footer className='mt-10 text-center text-xs text-gray-500'>Hecho con ❤️ en Costa Rica.</footer>
     </div>
   );
 }
