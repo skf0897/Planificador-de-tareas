@@ -1,9 +1,9 @@
-// API helper (respeta VITE_DEMO si existe)
+// client/src/api.js
+
+// === MODO DEMO (igual al tuyo) ===
 const isDemo = import.meta.env.VITE_DEMO === '1';
-const REAL_API_URL = import.meta.env.VITE_API_URL || (window.location.hostname === 'localhost' ? 'http://localhost:4000' : '/api');
 function delay(ms){ return new Promise(r=>setTimeout(r,ms)); }
 
-// DEMO backend
 const DEMO = {
   me: async()=>({ user:{ id:'demo', email:'demo@example.com' } }),
   register: async(e,p)=>({ ok:true, user:{ id:'demo', email:e } }),
@@ -22,38 +22,52 @@ const DEMO = {
   async recDelete(id){ const arr=JSON.parse(localStorage.getItem('demo_rec')||'[]').filter(r=>r._id!==id); localStorage.setItem('demo_rec', JSON.stringify(arr)); return { ok:true }; },
 };
 
+// === BASE URL corregida ===
+// NO pongas "/api" en VITE_API_URL (en Vercel debe ser: https://planificador-de-tareas.onrender.com)
+const BASE = (import.meta.env.VITE_API_URL || (window.location.hostname === 'localhost' ? 'http://localhost:4000' : '')).replace(/\/+$/, '');
+const API  = `${BASE}/api`;
+
+// parseo seguro
+async function J(res){ try { return await res.json(); } catch { return {}; } }
+
+// wrapper que siempre manda credenciales
 export async function api(path, options = {}) {
   if (isDemo) throw new Error('api() no disponible en DEMO');
-  const res = await fetch(`${REAL_API_URL}${path}`, {
-    credentials: 'include',
+  const res = await fetch(`${API}${path}`, {
+    method: 'GET',
+    credentials: 'include',                            // <- envía cookie en todas
     headers: { 'Content-Type': 'application/json', ...(options.headers || {}) },
     ...options,
   });
   if (!res.ok) {
-    let msg='Error'; try { const j=await res.json(); msg=j.error||JSON.stringify(j);} catch {}
-    throw new Error(msg);
+    const data = await J(res);
+    throw new Error(data.error || `HTTP ${res.status}`);
   }
-  return res.json();
+  const ct = res.headers.get('content-type') || '';
+  return ct.includes('application/json') ? res.json() : res.text();
 }
 
+/* ====== AUTH ====== */
 export const Auth = {
-  me: () => isDemo ? DEMO.me() : api('/api/auth/me'),
-  register: (email, password) => isDemo ? DEMO.register(email,password) : api('/api/auth/register', { method:'POST', body: JSON.stringify({ email, password }) }),
-  login: (email, password) => isDemo ? DEMO.login(email,password) : api('/api/auth/login', { method:'POST', body: JSON.stringify({ email, password }) }),
-  logout: () => isDemo ? DEMO.logout() : api('/api/auth/logout', { method:'POST' }),
+  me:       ()                => isDemo ? DEMO.me()               : api('/auth/me'),
+  register: (email,password)  => isDemo ? DEMO.register(email,password) : api('/auth/register', { method:'POST', body: JSON.stringify({ email, password }) }),
+  login:    (email,password)  => isDemo ? DEMO.login(email,password)    : api('/auth/login',    { method:'POST', body: JSON.stringify({ email, password }) }),
+  logout:   ()                => isDemo ? DEMO.logout()            : api('/auth/logout', { method:'POST' }),
 };
 
+/* ====== TASKS ====== */
 export const Tasks = {
-  range: (start, end) => isDemo ? DEMO.range(start,end) : api(`/api/tasks?start=${start}&end=${end}`),
-  byDate: (date) => isDemo ? DEMO.byDate(date) : api(`/api/tasks/${date}`),
-  create: (date, text, fromRecurring=null) => isDemo ? DEMO.create(date,text) : api('/api/tasks', { method:'POST', body: JSON.stringify({ date, text, fromRecurring }) }),
-  update: (id, data) => isDemo ? DEMO.update(id,data) : api(`/api/tasks/${id}`, { method:'PATCH', body: JSON.stringify(data) }),
-  remove: (id) => isDemo ? DEMO.remove(id) : api(`/api/tasks/${id}`, { method:'DELETE' }),
-  materialize: (recurringId, date, done=false, text) => isDemo ? DEMO.materialize(recurringId,date,done) : api('/api/tasks/materialize', { method:'POST', body: JSON.stringify({ recurringId, date, done, text }) }),
+  range:      (start,end)                 => isDemo ? DEMO.range(start,end)      : api(`/tasks?start=${start}&end=${end}`),
+  byDate:     (date)                      => isDemo ? DEMO.byDate(date)          : api(`/tasks/${date}`),
+  create:     (date,text,fromRecurring=null) => isDemo ? DEMO.create(date,text)  : api('/tasks', { method:'POST', body: JSON.stringify({ date, text, fromRecurring }) }),
+  update:     (id,data)                   => isDemo ? DEMO.update(id,data)       : api(`/tasks/${id}`, { method:'PATCH', body: JSON.stringify(data) }),
+  remove:     (id)                        => isDemo ? DEMO.remove(id)            : api(`/tasks/${id}`, { method:'DELETE' }),
+  materialize:(recurringId,date,done=false,text) => isDemo ? DEMO.materialize(recurringId,date,done) : api('/tasks/materialize', { method:'POST', body: JSON.stringify({ recurringId, date, done, text }) }),
 };
 
+/* ====== REGLAS ====== */
 export const Recurring = {
-  list: () => isDemo ? DEMO.recList() : api('/api/recurring'),
-  create: (payload) => isDemo ? DEMO.recCreate(payload) : api('/api/recurring', { method:'POST', body: JSON.stringify(payload) }),
-  delete: (id) => isDemo ? DEMO.recDelete(id) : api(`/api/recurring/${id}`, { method:'DELETE' }),
+  list:   ()          => isDemo ? DEMO.recList()         : api('/recurring'),
+  create: (payload)   => isDemo ? DEMO.recCreate(payload) : api('/recurring', { method:'POST', body: JSON.stringify(payload) }),
+  delete: (id)        => isDemo ? DEMO.recDelete(id)     : api(`/recurring/${id}`, { method:'DELETE' }),
 };
